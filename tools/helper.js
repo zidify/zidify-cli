@@ -1,7 +1,7 @@
 const readPkg = require("read-package-json");
 const figlet = require("figlet");
 const fs = require("fs/promises");
-import { fileURLToPath } from 'url';
+const { fileURLToPath } = require('url')
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename)
