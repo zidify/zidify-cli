@@ -18,7 +18,7 @@ const readPackageJson = () => {
 };
 
 // Function to read the global.json file
-export async function readGlobalJson() {
+const readGlobalJson = async()=> {
     try {
       const globalJsonPath = path.resolve(__dirname, '../globals/global.json');  // Adjust path based on your file structure
       const data = await fs.readFile(globalJsonPath, 'utf-8');
