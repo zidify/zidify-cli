@@ -1,6 +1,10 @@
 {
   "name": "zidify-cli",
   "version": "1.0.1",
+  "files": [
+    "tools/",
+    "globals/global.json"
+  ],
   "description": "zidify tool",
   "main": "index.mjs",
   "scripts": {
