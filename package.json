@@ -1,0 +1,46 @@
+{
+  "name": "zidify-cli",
+  "version": "1.0.0",
+  "description": "zidify tool",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "zidify": "./index.mjs"
+  },
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohameddawood53/mahlk-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/mohameddawood53/mahlk-cli/issues"
+  },
+  "keywords": [
+    "node",
+    "cli",
+    "zidify",
+    "zid themes",
+    "e-commerce",
+    "egy",
+    "eg"
+  ],
+  "dependencies": {
+    "axios": "^1.7.7",
+    "axios-cookiejar-support": "^5.0.2",
+    "chalk": "^5.3.0",
+    "child_process": "^1.0.2",
+    "chokidar": "^4.0.0",
+    "commander": "^11.1.0",
+    "enquirer": "^2.4.1",
+    "figlet": "^1.7.0",
+    "form-data": "^4.0.0",
+    "ora": "^8.0.1",
+    "puppeteer": "^23.4.0",
+    "read-package-json": "^7.0.0",
+    "tough-cookie": "^4.1.4"
+  }
+}

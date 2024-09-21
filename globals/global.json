@@ -1,0 +1,23 @@
+{
+    "content" : {
+        "about" : "The Official Zidify Command Line Interface",
+        "commands": {
+            "login": {
+                "description" : "Login To Zid Store."
+            },
+            "preview": {
+                "description" : "Preview The Theme On The Store."
+            },
+            "prompt": {
+                "ask" : {
+                    "description" : "Do you want to import an existing theme or create a new one?",
+                    "git" :{
+                        "not_logged" : {
+                            "description" : "You are not logged into your Git account. Do you want to log in now?"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
