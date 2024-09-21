@@ -18,14 +18,15 @@ import fs from "fs"
 const { readPackageJson, readGlobalJson, printCenteredText, printLeftedText, generateAsciiArt } = pkg;
 import path from "path"
 import FormData from 'form-data';
+let buildTimeout;
 
-// const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = process.cwd();
 
 const folderToWatch = __dirname;  // Replace with your folder path
 
 // Function to trigger the build
-async function zidThemeBuild(xsrfToken, Cookies, theme) {
+async function zidThemeBuild(Cookies, xsrfToken, theme) {
   const spinner = ora('Running zid-theme build...').start();
   // console.log('Running zid-theme build...');
   exec('zid-theme build', { cwd: path.resolve(folderToWatch) }, async (error, stdout, stderr) => {
@@ -39,26 +40,30 @@ async function zidThemeBuild(xsrfToken, Cookies, theme) {
     }
     console.log(`Build output:\n${stdout}`);
 
+    spinner.succeed("Theme built successfully!")
+
     // Path to your .zip file
-    const filePath = path.resolve(__dirname, __dirname + '.zip');
+    const filePath = path.resolve(process.cwd(), path.basename(process.cwd()) + '.zip');
     // Create a FormData object to hold the file
     const formData = new FormData();
     // Append the file to the form data (first arg is the form field name)
     formData.append('file', fs.createReadStream(filePath));
     formData.append("name", theme?.name)
     formData.append("code", theme?.code)
-    const response = await axios.post("https://web.zid.sa/api/v1/themes/" + theme?.id, formData, {
+    // Start the second spinner after build success
+    const spinner2 = ora('Uploading theme...').start();
+    const response = await axios.post(`https://web.zid.sa/api/v1/themes/${theme?.id}/update`, formData, {
       headers: {
         'X-XSRF-TOKEN': decodeURIComponent(xsrfToken), // Send XSRF-TOKEN
-        'Cookie': cookieString,      // Send the cookies
-        ...formData.getHeaders()
+        'Cookie': Cookies, // Send the cookies
       }
     }).then(response => {
-      spinner.succeed("File uploaded successfully!")
-    })
-      .catch(error => {
-        spinner.fail("Error uploading file!")
-      });
+      spinner2.succeed("File uploaded successfully!")
+    }).catch(error => {
+      // console.log("Error uploading file!", error)
+
+      spinner2.fail("Error uploading file!")
+    });
 
   });
 }
@@ -127,7 +132,7 @@ async function login() {
     };
 
     fs.writeFileSync('cookies.json', JSON.stringify(cookieData, null, 2));
-    console.log('Cookies and XSRF-TOKEN saved to cookies.json');
+    console.log('Data saved to cookies.json');
 
     // Close the browser
     await browser.close();
@@ -254,7 +259,7 @@ async function login() {
                 const selectedTheme = themes.find(theme => theme.name === selectedThemeId);
 
                 if (selectedTheme) {
-                  console.log(`Selected Theme Name: ${selectedTheme.id}`);
+                  // console.log(`Selected Theme Name: ${selectedTheme.id}`);
 
 
                   await zidThemeBuild(cookies, xsrfToken, selectedTheme);
