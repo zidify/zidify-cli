@@ -19,8 +19,8 @@ const { readPackageJson, readGlobalJson, printCenteredText, printLeftedText, gen
 import path from "path"
 import FormData from 'form-data';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+const __dirname = process.cwd();
 
 const folderToWatch = __dirname;  // Replace with your folder path
 
