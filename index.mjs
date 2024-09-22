@@ -73,6 +73,7 @@ async function zidThemeBuild(Cookies, xsrfToken, theme) {
 
 
 async function login() {
+    const spinner = ora('Logging In... , Please, Don\'t close the browser.').start();
     // Launch the browser in non-headless mode with disabled web security
     const browser = await puppeteer.launch({
         headless: false, // Visible browser for user interaction
@@ -87,7 +88,7 @@ async function login() {
     );
 
     try {
-        const spinner = ora('Logging In... , Please, Don\'t close the browser.').start();
+
         // Navigate to the login page
         await page.goto('https://web.zid.sa/login', {
             waitUntil: 'networkidle0', // Wait for network to be idle
@@ -210,7 +211,9 @@ async function login() {
         // Check if the login was successful and the user is on the home page
 
     } catch (error) {
-        spinner.fail('Login failed!. Please, try again later.')
+        if (spinner) {
+            spinner.fail('Login failed!. Please, try again later.')
+        }
     } finally {
         // Close the browser if still open
         if (browser.isConnected()) {
