@@ -330,7 +330,7 @@ async function login() {
                                             // Set a timeout to trigger the build after no more events are fired for 500ms
                                             buildTimeout = setTimeout(async () => {
                                                 await zidThemeBuild(cookies, xsrfToken, selectedTheme);
-                                            }, 500);  // Adjust the debounce time as needed
+                                            }, 1000);  // Adjust the debounce time as needed
                                         }
                                     });
 
