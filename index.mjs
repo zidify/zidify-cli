@@ -28,6 +28,8 @@ const __dirname = process.cwd();
 
 const folderToWatch = __dirname;  // Replace with your folder path
 
+
+/*GET Domain name https://web.zid.sa/api/v1/account/settings/store/get-store-onboarding-rules*/
 // Function to trigger the build
 async function zidThemeBuild(Cookies, xsrfToken, theme) {
     const spinner = ora('Running zid-theme build...').start();
