@@ -27,9 +27,84 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = process.cwd();
 
 const folderToWatch = __dirname;  // Replace with your folder path
+// Define the function to handle live-preview
 
+let domain_name = null;
+let theme_token = null;
+let live_preview = false
+let p_browser = null
+let p_page = null
+
+async function previewStore(theme_id, cookies, xsrfToken) {
+    // Launch the browser with a larger window size
+    p_browser = await puppeteer.launch({
+        headless: false,
+        args: ['--start-maximized'] // This maximizes the browser window
+    });
+
+    p_page = await p_browser.newPage();
+
+    // Set custom headers
+    await p_page.setExtraHTTPHeaders({
+        'X-XSRF-TOKEN': decodeURIComponent(xsrfToken), // Send XSRF-TOKEN
+        'Cookie': cookies, // Send the cookies
+    });
+
+    // Set the viewport to a larger size (you can adjust the width and height as needed)
+    await p_page.setViewport({
+        width: 1920, // Full HD width
+        height: 1080, // Full HD height
+    });
+
+    const url = new URL(domain_name);
+    url.searchParams.set('theme-id', theme_id);
+    url.searchParams.set('md_token', theme_token);
+    url.searchParams.set('previewMode', "true");
+
+    // Open the page and wait until network activity is idle
+    await p_page.goto(url.toString(), {waitUntil: 'networkidle2'});
+
+    // Optional: If you want the page to fit everything into the view, use the following:
+    await p_page.evaluate(() => window.scrollTo(0, 0));
+}
+
+
+// Function to refresh the page with a specific theme_id
+const refreshPageWithThemeId = async (themeId) => {
+    const url = new URL(await p_page.url());
+    url.searchParams.set('theme-id', themeId);
+    url.searchParams.set('md_token', theme_token);
+    url.searchParams.set('previewMode', "true");
+
+    // Reload the page with the updated theme_id
+    await p_page.goto(url.href, {waitUntil: 'networkidle2'});
+};
+
+async function fetchStoreData(cookies, xsrfToken, theme_id) {
+    const spinner = ora('Fetching live preview data...').start();
+
+    try {
+        // Make the request to the live preview URL
+        await axios.get('https://web.zid.sa/api/v1/account/settings/store/get-store-onboarding-rules', {
+            headers: {
+                'X-XSRF-TOKEN': decodeURIComponent(xsrfToken), // Send XSRF-TOKEN
+                'Cookie': cookies, // Send the cookies
+            }
+        }).then(async (response) => {
+            spinner.succeed('Live preview data fetched successfully!');
+            // Print the response data to the console
+            domain_name = `https://${response.data?.data?.domain_name}`
+
+            await previewStore(theme_id, cookies, xsrfToken)
+        }).catch((error) => {
+            spinner.fail('Error fetching live preview data: ' + error);
+        });
+    } catch (error) {
+    }
+}
 
 /*GET Domain name https://web.zid.sa/api/v1/account/settings/store/get-store-onboarding-rules*/
+
 // Function to trigger the build
 async function zidThemeBuild(Cookies, xsrfToken, theme) {
     const spinner = ora('Running zid-theme build...').start();
@@ -62,13 +137,18 @@ async function zidThemeBuild(Cookies, xsrfToken, theme) {
                 'X-XSRF-TOKEN': decodeURIComponent(xsrfToken), // Send XSRF-TOKEN
                 'Cookie': Cookies, // Send the cookies
             }
-        }).then(response => {
+        }).then(async (response) => {
             spinner2.succeed("File uploaded successfully!")
+            if (live_preview) {
+                // Call the refresh function with theme_id=123456
+                await refreshPageWithThemeId(theme?.id);
+            }
         }).catch(error => {
             // console.log("Error uploading file!", error)
 
             spinner2.fail("Error uploading file!")
         });
+
 
     });
 }
@@ -85,9 +165,7 @@ async function login() {
     const page = await browser.newPage();
 
     // Set a custom user-agent
-    await page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36'
-    );
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36');
 
     try {
 
@@ -101,8 +179,7 @@ async function login() {
 
         // Wait for navigation, which can be to the OTP or password page
         await page.waitForNavigation({
-            waitUntil: 'networkidle0',
-            timeout: 0, // Wait indefinitely until user submits email and page changes
+            waitUntil: 'networkidle0', timeout: 0, // Wait indefinitely until user submits email and page changes
         });
 
         // Check if redirected to OTP page or password page
@@ -117,8 +194,7 @@ async function login() {
 
         // Wait for another navigation to either OTP success or home page
         await page.waitForNavigation({
-            waitUntil: 'networkidle0',
-            timeout: 0, // Wait until user completes OTP or password login
+            waitUntil: 'networkidle0', timeout: 0, // Wait until user completes OTP or password login
         });
 
 
@@ -129,8 +205,7 @@ async function login() {
 
             // Wait for another navigation to either password success or home page
             await page.waitForNavigation({
-                waitUntil: 'networkidle0',
-                timeout: 0, // Wait until user completes OTP or password login
+                waitUntil: 'networkidle0', timeout: 0, // Wait until user completes OTP or password login
             });
 
             if (page.url().includes('/home')) {
@@ -154,8 +229,7 @@ async function login() {
 
                 // Save the cookies and XSRF-TOKEN to a file
                 const cookieData = {
-                    cookies: cookieString,
-                    xsrfToken: decodeURIComponent(xsrfToken)
+                    cookies: cookieString, xsrfToken: decodeURIComponent(xsrfToken)
                 };
 
                 fs.writeFileSync('cookies.json', JSON.stringify(cookieData, null, 2));
@@ -193,8 +267,7 @@ async function login() {
 
             // Save the cookies and XSRF-TOKEN to a file
             const cookieData = {
-                cookies: cookieString,
-                xsrfToken: decodeURIComponent(xsrfToken)
+                cookies: cookieString, xsrfToken: decodeURIComponent(xsrfToken)
             };
 
             fs.writeFileSync('cookies.json', JSON.stringify(cookieData, null, 2));
@@ -256,7 +329,8 @@ async function login() {
         let preview_command = program.command('preview')
             .description(global?.content?.commands?.preview?.description)
             .alias("p")
-            .action(async () => {
+            .option('--live-preview', 'Enable live preview functionality')
+            .action(async (options) => {
                 const spinner = ora('Checking cookies.json and fetching data...').start();
 
                 try {
@@ -281,6 +355,7 @@ async function login() {
 
                             // Extract themes from the response data
                             const themes = response?.data?.data?.customThemes?.themes;
+                            theme_token = response?.data?.data?.customThemes?.previewToken
 
                             if (themes && themes.length > 0) {
                                 // Create an array of choices for the prompt
@@ -290,9 +365,7 @@ async function login() {
                                 }));
 
                                 const prompt = new Select({
-                                    name: 'theme',
-                                    message: 'Select a theme:',
-                                    choices: themeChoices
+                                    name: 'theme', message: 'Select a theme:', choices: themeChoices
                                 });
 
                                 // Await the user's selection of theme ID
@@ -302,6 +375,7 @@ async function login() {
                                 const selectedTheme = themes.find(theme => theme.name === selectedThemeId);
 
                                 if (selectedTheme) {
+
                                     // console.log(`Selected Theme Name: ${selectedTheme.id}`);
 
 
@@ -311,13 +385,10 @@ async function login() {
                                     // Watcher configuration
                                     const watcher = chokidar.watch(folderToWatch, {
                                         ignored: /(^|[\/\\])\..|\.zip$/,  // Ignore dotfiles and zip files
-                                        persistent: true,
-                                        ignoreInitial: true,        // Ignore the initial 'add' events
-                                        followSymlinks: false,
-                                        depth: 10,                  // Adjust this as per your folder structure
+                                        persistent: true, ignoreInitial: true,        // Ignore the initial 'add' events
+                                        followSymlinks: false, depth: 10,                  // Adjust this as per your folder structure
                                         awaitWriteFinish: {         // Ensures file writes are finished before triggering the event
-                                            stabilityThreshold: 200,
-                                            pollInterval: 100
+                                            stabilityThreshold: 200, pollInterval: 100
                                         }
                                     });
 
@@ -332,12 +403,20 @@ async function login() {
                                             // Set a timeout to trigger the build after no more events are fired for 500ms
                                             buildTimeout = setTimeout(async () => {
                                                 await zidThemeBuild(cookies, xsrfToken, selectedTheme);
+
                                             }, 1000);  // Adjust the debounce time as needed
                                         }
                                     });
 
-                                    watcher.on('ready', () => {
-                                        console.log('Watching for changes in the theme folder...');
+                                    watcher.on('ready', async () => {
+                                        if (options.livePreview) {
+                                            live_preview = true
+                                            await fetchStoreData(cookies, xsrfToken, selectedTheme?.id)
+
+
+                                        } else {
+                                            console.log('Watching for changes in the theme folder...');
+                                        }
                                     });
 
 
