@@ -1,14 +1,14 @@
 const readPkg = require("read-package-json");
 const figlet = require("figlet");
 const fs = require("fs/promises");
-const { fileURLToPath } = require('url')
+const {fileURLToPath} = require('url')
 const path = require('path')
 
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename)
 const readPackageJson = () => {
     return new Promise((resolve, reject) => {
-        readPkg('./package.json', console.error, false, (error, data) => {
+        readPkg(path.resolve(__dirname, '../package.json'), console.error, false, (error, data) => {
             if (error) {
                 reject(error);
             } else {
@@ -19,16 +19,16 @@ const readPackageJson = () => {
 };
 
 // Function to read the global.json file
-const readGlobalJson = async()=> {
+const readGlobalJson = async () => {
     try {
-      const globalJsonPath = path.resolve(__dirname, '../globals/global.json');  // Adjust path based on your file structure
-      const data = await fs.readFile(globalJsonPath, 'utf-8');
-      return JSON.parse(data);
+        const globalJsonPath = path.resolve(__dirname, '../globals/global.json');  // Adjust path based on your file structure
+        const data = await fs.readFile(globalJsonPath, 'utf-8');
+        return JSON.parse(data);
     } catch (error) {
-      console.error('Error reading global.json:', error);
-      throw error;
+        console.error('Error reading global.json:', error);
+        throw error;
     }
-  }
+}
 
 // Function to generate ASCII art from text with limited width
 const generateAsciiArt = (text) => {
@@ -65,4 +65,4 @@ const printLeftedText = (text, color, backgroundColor) => {
     console.log(color(text));
 };
 
-module.exports = { readPackageJson, readGlobalJson, printLeftedText, centerText, printCenteredText, generateAsciiArt };
+module.exports = {readPackageJson, readGlobalJson, printLeftedText, centerText, printCenteredText, generateAsciiArt};
